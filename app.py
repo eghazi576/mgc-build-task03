@@ -17,6 +17,7 @@ import pandas as pd
 from flask import Flask, request
 
 from ask import ask, load_documents
+from train import normalise_city  # shared so scoring matches training
 
 HERE = Path(__file__).parent
 app = Flask(__name__)
@@ -121,7 +122,7 @@ def score_route():
 
     row = pd.DataFrame([{
         "source": f["source"],
-        "city": f["city"].strip().title(),
+        "city": normalise_city(f["city"]),
         "property_type": f["property_type"],
         **numbers,
         "is_overseas": int("is_overseas" in f),

@@ -7,6 +7,11 @@ DROPPED — identifiers / bookkeeping:
   * lead_id, crm_record_hash — identifiers, no signal.
   * created_at — kept out of the baseline for simplicity (month/seasonality
     could be engineered later).
+  * area — 10 values plus 470 blanks, and it carries no signal: every area
+    appears under all 9 cities in near-equal proportions (so it is not a
+    sub-region of city), and conversion by area ranges 0.058-0.095 around
+    the 0.070 base rate, i.e. noise at this sample size. Cheap to add back
+    (11 one-hot columns) if a future dump makes it meaningful.
 
 DROPPED — leakage:
   * token_amount_received_pkr — a token is paid when the lead is already
@@ -60,12 +65,21 @@ NUMERIC = [
 ]
 
 
+def normalise_city(name: str) -> str:
+    """Map one raw city string to its canonical form.
+
+    app.py imports this so a lead scored through the web form is normalised
+    exactly as the training rows were — otherwise a salesperson typing 'ISB'
+    produces 'Isb', an unseen category that the encoder silently zeroes.
+    """
+    c = name.strip().lower()
+    return CITY_FIX.get(c, c).title()
+
+
 def load_clean() -> pd.DataFrame:
     df = pd.read_csv(HERE / "leads.csv")
     df = df.drop_duplicates(subset="crm_record_hash", keep="first")
-    df["city"] = (
-        df["city"].str.strip().str.lower().replace(CITY_FIX).str.title()
-    )
+    df["city"] = df["city"].map(normalise_city)
     df["bedrooms"] = df["bedrooms"].fillna(0)  # plots/shops have none
     return df
 

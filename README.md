@@ -56,9 +56,12 @@ re-entries.
 Dropped as leakage: **`token_amount_received_pkr`** — a token is paid when
 the lead is already converting (every converted lead has token > 0, almost no
 unconverted lead does). Using it scores near-perfect and predicts nothing
-about a new lead. Dropped as noise: `lead_id`, `crm_record_hash` (identifiers)
-and `created_at` (kept out of the baseline; month/seasonality is a possible
-later feature). Fixed: the 160 duplicate rows (dropped one of each pair),
+about a new lead. Dropped as noise: `lead_id`, `crm_record_hash` (identifiers),
+`created_at` (kept out of the baseline; month/seasonality is a possible
+later feature) and `area` — 10 values plus 470 blanks, spread near-uniformly
+across all 9 cities, with conversion by area running 0.058–0.095 against a
+0.070 base rate, so it is noise at this sample size rather than a sub-region
+of `city`. Fixed: the 160 duplicate rows (dropped one of each pair),
 city case/abbreviation mess (`ISLAMABAD`/`ISB` → `Islamabad`), missing
 `bedrooms` (~39%, mostly plots/shops — imputed 0 with `property_type` present
 so the model can tell them apart), and median-imputed the other numeric gaps.
@@ -77,8 +80,15 @@ than random ranking — not a suspicious 0.99.
 
 One Flask page (`app.py`), both features: ask the documents (wired to Part 1)
 and score a lead (wired to Part 3's `model.pkl`). No styling, per the brief.
-The page stays up if the API key is missing or the model file hasn't been
-trained yet — it tells you what to do instead of crashing.
+The page stays up if the API key is missing, the model file hasn't been
+trained yet, the API call fails, or a numeric box gets something that isn't a
+number — each case tells you what to do instead of crashing.
+
+Scoring imports `normalise_city` from `train.py` rather than repeating the
+mapping, so a lead typed in as `ISB` is normalised to `Islamabad` exactly as
+the training rows were. Duplicating that logic is how train/serve skew starts:
+the encoder would silently zero the unseen `Isb` category and quietly return a
+worse score with no error.
 
 ## Known gaps / what I'd do next
 
