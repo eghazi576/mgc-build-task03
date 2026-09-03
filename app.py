@@ -63,6 +63,19 @@ SOURCES = ["Facebook Ads", "Property Portal", "Google Search", "Instagram",
            "Referral", "Walk-in", "WhatsApp Campaign", "Expo Stall", "Billboard"]
 PTYPES = ["Apartment", "Plot", "Villa", "Commercial Shop", "Penthouse", "Farmhouse"]
 
+# The numeric half of the score form. Blank means 0; anything that isn't a
+# number is reported back to the salesperson instead of raising a 500.
+NUMERIC_FIELDS = {
+    "budget_pkr_lac": float,
+    "bedrooms": float,
+    "first_response_minutes": float,
+    "calls_made": int,
+    "total_call_seconds": float,
+    "whatsapp_replies": int,
+    "site_visits": int,
+    "agent_experience_years": float,
+}
+
 
 def render(q="", answer="", score=""):
     return PAGE.format(
@@ -96,18 +109,21 @@ def score_route():
     if MODEL is None:
         return render(score="model.pkl not found — run `python train.py` first.")
     f = request.form
+
+    numbers = {}
+    for field, cast in NUMERIC_FIELDS.items():
+        raw = f[field].strip()
+        try:
+            numbers[field] = cast(raw) if raw else cast(0)
+        except ValueError:
+            return render(score=f"{field.replace('_', ' ')}: "
+                                f"'{raw}' is not a valid number.")
+
     row = pd.DataFrame([{
         "source": f["source"],
         "city": f["city"].strip().title(),
         "property_type": f["property_type"],
-        "budget_pkr_lac": float(f["budget_pkr_lac"] or 0),
-        "bedrooms": float(f["bedrooms"] or 0),
-        "first_response_minutes": float(f["first_response_minutes"] or 0),
-        "calls_made": int(f["calls_made"] or 0),
-        "total_call_seconds": float(f["total_call_seconds"] or 0),
-        "whatsapp_replies": int(f["whatsapp_replies"] or 0),
-        "site_visits": int(f["site_visits"] or 0),
-        "agent_experience_years": float(f["agent_experience_years"] or 0),
+        **numbers,
         "is_overseas": int("is_overseas" in f),
         "referred_by_existing_client": int("referred_by_existing_client" in f),
         "has_financing_approved": int("has_financing_approved" in f),
