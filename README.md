@@ -69,12 +69,20 @@ so the model can tell them apart), and median-imputed the other numeric gaps.
 Model: `HistGradientBoostingClassifier` in a sklearn pipeline, 80/20
 stratified split.
 
-**Metric: PR-AUC = 0.297** (random baseline = 0.070; ROC-AUC 0.787 for
+**Metric: PR-AUC = 0.322** (random baseline = 0.070; ROC-AUC 0.793 for
 reference). Only 6.9% of leads convert, so accuracy is meaningless — predict
 "no" for everyone and score 93%. The business use is ranking which leads to
 call first, so precision/recall on the positive class across thresholds is
-the honest lens. 0.297 is a modest, believable baseline — roughly 4× better
+the honest lens. 0.322 is a modest, believable baseline — roughly 4.6× better
 than random ranking — not a suspicious 0.99.
+
+That figure is from Python 3.14.7 / scikit-learn 1.9.0 / pandas 3.0.5 with
+`random_state=42`; it is reproducible run-to-run on that stack. An earlier
+draft of this README quoted 0.297 from a different library version, so expect
+the third decimal to move if you run it elsewhere — `HistGradientBoosting`
+defaults and `train_test_split` shuffling both change between releases. The
+conclusion doesn't move: ~4-5× better than random ranking, nowhere near the
+0.9+ you get by leaving the leakage column in.
 
 ## Part 4
 
