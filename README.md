@@ -21,6 +21,9 @@ python train.py
 
 # Part 4 — web page at http://localhost:5000
 python app.py
+
+# Tests — no API key, no network and no trained model.pkl needed
+python test_app.py
 ```
 
 Windows: use `set GEMINI_API_KEY=AIza...` instead of `export`.
@@ -100,7 +103,11 @@ worse score with no error.
 
 ## Known gaps / what I'd do next
 
-- No automated tests; the five brief questions were verified manually.
+- `test_app.py` covers all four parts in 24 tests — the outbound API call is
+  stubbed and the classifier is replaced with a stand-in, so it runs on a
+  fresh clone with no key, no network and no `model.pkl`. The five brief
+  questions were still checked by hand against the live API, since asserting
+  on a model's prose would be brittle.
 - `train.py` has no hyperparameter tuning (deliberate — brief said baseline).
 - The assistant answers one question at a time; no conversation memory.
 - Next: log every question the assistant can't answer — that list is the
